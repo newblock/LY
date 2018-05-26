@@ -8,6 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <title>test</title>
+    <script src=../js/nebPay.js></script>
 
 
     <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
@@ -19,6 +20,8 @@
     <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="../css/tstyle.css">
+    <script src=../lib/nebPay.js></script>
+    <script src=../lib/nebulas.js></script>
 
   </head>
 
@@ -210,6 +213,8 @@
             <button type="button" onclick="onClickAddText()">点我!</button>
             <button type="button" onclick="onClickBtn()">按钮2</button>
             <button type="button" onclick="postJson()">按钮3</button>
+            <button type="button" onclick="testContract()">合约测试</button>
+            <button type="button" onclick="getWallectInfo()">合约测试</button>
           </div>
 
           <div class="">
@@ -325,28 +330,97 @@
     $(".task-list").append(div.firstChild);
   }
 
-  function upload()
-  {
-    //var form = new FormData($("#upload_form")[0]);
+  // function upload()
+  // {
+  //   //var form = new FormData($("#upload_form")[0]);
+  //
+  //   $.ajax({
+  //         //几个参数需要注意一下
+  //             type: "POST",//方法类型
+  //             dataType: "json",//预期服务器返回的数据类型
+  //             url: "https://yabu44d9.qcloud.la/weapp/upload" ,//url
+  //             data: $('#upload_form')[0],
+  //             success: function (result) {
+  //                 console.log(result);//打印服务端返回的数据(调试用)
+  //                 if (result.resultCode == 200) {
+  //                     alert("SUCCESS");
+  //                 }
+  //                 ;
+  //             },
+  //             error : function() {
+  //                 alert("异常！");
+  //             }
+  //         });
+  // }
 
-    $.ajax({
-          //几个参数需要注意一下
-              type: "POST",//方法类型
-              dataType: "json",//预期服务器返回的数据类型
-              url: "https://yabu44d9.qcloud.la/weapp/upload" ,//url
-              data: $('#upload_form')[0],
-              success: function (result) {
-                  console.log(result);//打印服务端返回的数据(调试用)
-                  if (result.resultCode == 200) {
-                      alert("SUCCESS");
-                  }
-                  ;
-              },
-              error : function() {
-                  alert("异常！");
-              }
-          });
-  }
+        var nebulas = require("nebulas"),
+        neb = new nebulas.Neb();
+        neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
+
+        var NebPay = require("nebpay");
+        var nebPay = new NebPay();
+        //to check if the extension is installed
+        //if the extension is installed, var "webExtensionWallet" will be injected in to web page
+        setTimeout(function () { if (typeof (webExtensionWallet) === "undefined") {
+                alert("请先安装星云钱包插件.");
+        }}, 500); //等待加载钱包
+        function onClickCallDapp(value,callFunction,args)
+        {
+                var to = "n1mSeomqNjTYALFJidHY1NMZoChd83h7nH6"; //合约地址
+                var callArgs = args;
+                nebPay.call(to,
+                value,
+                callFunction,
+                callArgs,
+                {
+                        qrcode: {
+                        showQRCode: false
+                        },
+                        goods: {
+                        name: "ccjob",
+                        desc: "0.001 nas from ccjob"
+                        },
+                        listener: cbCallDapp
+                });
+        }
+        function cbCallDapp(resp)
+        {
+                console.log("callback resp: " + JSON.stringify(resp));
+        }
+
+        function testContract()
+        {
+          var callArgs = "[\"" + "前端工程师"+ "\"]";
+          //var callArgs = "fdadfafdsa";
+          onClickCallDapp(0.001,"postEmployee",callArgs);
+        }
+
+          function getWallectInfo()
+          {
+            var add ;
+            window.postMessage({
+                "target": "contentscript",
+                "data": {},
+                "method": "getAccount",
+            }, "*");
+            window.addEventListener('message', function (e)
+            {
+                if (e.data && e.data.data) {
+                    if (e.data.data.account) {//这就是当前钱包中的地址
+                        var address = e.data.data.account;
+
+                        add = address;
+
+                        console.log("address:  "+address);
+                        //app.updateUserInfo() //小提示：获取钱包地址后，就可以调用对应的方法查询用户信息啦
+                    }
+                }
+            });
+
+            if (!add) {
+              alert("null:  "+add);
+            }
+          }
 
   </script>
 </html>
